@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mirror ME | 人格镜像</title>
+  <meta name="description" content="Mirror ME 是一个通过自然聊天、兴趣数据和自我认知填写生成动态人格画像的交互式网页。">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="#capture" aria-label="Mirror ME">
+      <img src="./assets/xiao-me.png" alt="小Me头像" class="brand-mark">
+      <span>
+        <strong>Mirror ME</strong>
+        <small>人格镜像实验室</small>
+      </span>
+    </a>
+    <nav class="top-nav" aria-label="页面导航">
+      <a href="#capture" data-route="capture">Mirror Capture</a>
+      <a href="#self" data-route="self">Self Mirror</a>
+      <a href="#card" data-route="card">Mirror Card</a>
+      <a href="#match" data-route="match">Mirror Match</a>
+    </nav>
+  </header>
+
+  <main class="app-shell">
+    <section class="account-bar" aria-label="个人账户">
+      <div class="account-current">
+        <span class="account-dot"></span>
+        <label>当前账户
+          <select id="currentAccountSelect"></select>
+        </label>
+      </div>
+      <form class="account-create" id="accountForm">
+        <label>创建账户
+          <input id="accountName" type="text" maxlength="16" placeholder="输入昵称，例如：小林">
+        </label>
+        <button class="ghost-button" type="submit">创建</button>
+      </form>
+      <p>账户资料保存在本浏览器中；切换账户后，Self Mirror 与 Mirror Card 会同步显示该用户的人格资料。</p>
+    </section>
+
+    <section class="route-page capture-page" data-page="capture" aria-labelledby="capture-title">
+      <div class="page-hero">
+        <div>
+          <p class="eyebrow">Mirror Capture</p>
+          <h1 id="capture-title">镜中之我</h1>
+          <p class="page-lead">通过自然聊天和兴趣数据，观察用户在真实表达里呈现出的性格线索。小Me 不做问卷审问，而是在对话、偏好和关注点中生成初步人格画像。</p>
+        </div>
+      </div>
+
+      <div class="capture-layout">
+        <article class="tool-panel chat-panel">
+          <div class="panel-title">
+            <img src="./assets/xiao-me.png" alt="" aria-hidden="true">
+            <div>
+              <h2>AI 自然聊天人格分析</h2>
+              <p>和小ME聊一聊最近的生活吧！</p>
+            </div>
+          </div>
+          <div class="chat-window" id="chatWindow" aria-live="polite">
+            <div class="message ai">你好，我是小Me。今天想从生活、学习、兴趣、人际关系，还是未来计划聊起？</div>
+            <div class="message user">我最近在学心理学，也很想知道自己在别人眼里是什么样。</div>
+            <div class="message ai">这听起来很有意思。心理学有时候像一面小镜子，会让人突然想看看自己在关系里是什么样。你最近是被哪件事触发了这种好奇？</div>
+          </div>
+          <form class="chat-input" id="chatForm">
+            <button type="button" class="icon-button" id="voiceButton" aria-label="切换语音模式" title="语音模式">🎙</button>
+            <input id="chatText" type="text" maxlength="80" placeholder="例如：我喜欢独处，但也希望被理解">
+            <button type="submit" class="send-button">发送</button>
+          </form>
+          <p class="notice">AI 分析不是医学诊断，也不是绝对人格结论，而是基于行为线索的自我探索工具。</p>
+        </article>
+
+        <article class="tool-panel interest-panel">
+          <div class="panel-title">
+            <div class="panel-icon">◎</div>
+            <div>
+              <h2>社交兴趣数据分析</h2>
+              <p>模拟小红书、抖音、B站收藏与浏览记录导入。</p>
+            </div>
+          </div>
+          <div class="upload-row">
+            <label class="upload-box">
+              <input type="file" id="interestFile" accept=".csv,.txt,.json,.md">
+              <span>导入兴趣数据</span>
+              <small id="interestFileStatus">可读取 txt、csv、json、md 文档</small>
+            </label>
+            <button class="ghost-button" id="simulateImport" type="button">生成分析</button>
+          </div>
+          <div class="data-viz">
+            <div class="pie" aria-label="兴趣饼图"></div>
+            <div class="word-cloud" aria-label="兴趣词云" id="wordCloud"></div>
+          </div>
+          <ul class="metric-list" id="interestMetrics"></ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="route-page self-page" data-page="self" aria-labelledby="self-title">
+      <div class="page-hero compact">
+        <div>
+          <p class="eyebrow">Self Mirror</p>
+          <h1 id="self-title">心中之我</h1>
+          <p class="page-lead">这部分由用户主动填写和测试数据共同形成，代表“我认为自己是什么样”。它会保存到当前账户，并作为 Mirror Card 背面的内容。</p>
+        </div>
+      </div>
+
+      <div class="self-layout">
+        <form class="self-form tool-panel" id="selfForm">
+          <p class="scale-note">说明：MBTI 使用你提供文档中的中文 48 题 A/B 计分题库；大五人格使用 IPIP Big-Five Factor Markers 的中文翻译版本。</p>
+          <div class="test-actions">
+            <button class="test-button" id="getMbti" type="button">
+              <span>MBTI测试</span>
+              <strong id="mbtiResult">未获取</strong>
+            </button>
+            <button class="test-button" id="getBigFive" type="button">
+              <span>大五人格测试</span>
+              <strong id="bigFiveResult">未获取</strong>
+            </button>
+          </div>
+          <label>性格关键词
+            <input id="selfTraits" type="text" value="内向、敏感、共情、慢热">
+          </label>
+          <label>兴趣爱好
+            <input id="selfInterests" type="text" value="心理学、电影、旅行、写作">
+          </label>
+          <label>50字以内自我介绍
+            <textarea id="selfIntro" maxlength="50">我喜欢观察人，也喜欢在安全的关系里表达真实想法。</textarea>
+          </label>
+          <button class="primary-action" type="submit">保存到账户并同步到 Mirror Card</button>
+        </form>
+
+        <section class="quiz-panel" id="quizPanel" hidden aria-label="内置人格测试">
+          <div class="quiz-heading">
+            <div>
+              <span id="quizKicker">量表</span>
+              <h2 id="quizTitle">测试题目</h2>
+            </div>
+            <button class="icon-close" id="closeQuiz" type="button" aria-label="关闭测试">×</button>
+          </div>
+          <p id="quizIntro"></p>
+          <form id="quizForm" class="quiz-form"></form>
+        </section>
+
+        <article class="profile-preview tool-panel">
+          <h2>自我认知预览</h2>
+          <div class="mini-profile">
+            <span id="previewMbti">INFP</span>
+            <p id="previewIntro">我喜欢观察人，也喜欢在安全的关系里表达真实想法。</p>
+          </div>
+          <div class="test-summary" id="testSummary">
+            <span>测试结果</span>
+            <p>完成 MBTI 与大五人格测试后，这里会显示各维度比例、总结果和简要介绍。</p>
+          </div>
+          <div class="result-bars" id="resultBars">
+            <div class="result-group">
+              <strong>MBTI 维度</strong>
+              <span>完成测试后显示 E/I、S/N、T/F、J/P 比例。</span>
+            </div>
+            <div class="result-group">
+              <strong>大五人格</strong>
+              <span>完成测试后显示开放性、尽责性、外向性、宜人性、神经质。</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="route-page card-page" data-page="card" aria-labelledby="card-title">
+      <div class="page-hero compact">
+        <div>
+          <p class="eyebrow">Mirror Card</p>
+          <h1 id="card-title">双面画像</h1>
+          <p class="page-lead">正面是 AI 观察到的“镜中之我”，反面是当前账户填写与测试数据形成的“心中之我”。点击卡片即可翻转。</p>
+        </div>
+      </div>
+
+      <div class="card-workspace">
+        <div class="flip-card" id="mirrorCard" tabindex="0" role="button" aria-label="点击翻转人格卡片">
+          <div class="flip-inner">
+            <article class="card-face card-front">
+              <div class="card-top">
+                <span>镜中之我</span>
+                <img src="./assets/xiao-me.png" alt="" aria-hidden="true">
+              </div>
+              <h2 id="aiSummary">你像一个温柔的深度连接者。</h2>
+              <p id="aiTags">AI 观察标签：表达欲、共情、深度交流、开放探索、关系敏感。</p>
+              <div class="radar-row">
+                <div class="radar-tile"><span>镜中 MBTI</span><canvas id="aiMbtiRadar" width="220" height="180"></canvas></div>
+                <div class="radar-tile"><span>镜中 大五</span><canvas id="aiBigFiveRadar" width="220" height="180"></canvas></div>
+              </div>
+              <div class="interest-bars" id="interestBars"></div>
+            </article>
+            <article class="card-face card-back">
+              <div class="card-top">
+                <span>心中之我</span>
+                <strong id="cardMbti">INFP</strong>
+              </div>
+              <h2 id="cardIntro">我喜欢观察人，也喜欢在安全的关系里表达真实想法。</h2>
+              <p id="cardTraits">自我关键词：内向、敏感、共情、慢热</p>
+              <div class="radar-row">
+                <div class="radar-tile"><span>心中 MBTI</span><canvas id="selfMbtiRadar" width="220" height="180"></canvas></div>
+                <div class="radar-tile"><span>心中 大五</span><canvas id="selfBigFiveRadar" width="220" height="180"></canvas></div>
+              </div>
+              <p id="cardInterests">自认为的兴趣：心理学、电影、旅行、写作</p>
+            </article>
+          </div>
+        </div>
+
+        <aside class="analysis-panel tool-panel">
+          <h2>AI 认知差距分析</h2>
+          <p class="analysis-intro">让小Me 基于当前账户的“镜中之我”和“心中之我”生成一段新的差距解读。</p>
+          <button class="primary-action" id="generateGap" type="button">生成认知差距分析</button>
+          <div class="ai-gap-result" id="aiGapResult">
+            <span>等待分析</span>
+            <p>点击按钮后，小Me 会结合聊天行为、测试数据、自我关键词与兴趣分布生成个性化分析。</p>
+          </div>
+          <div class="card-actions">
+            <button class="primary-action" id="downloadCard" type="button">下载卡片摘要</button>
+            <button class="ghost-button" id="flipButton" type="button">翻转名片</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="route-page match-page" data-page="match" aria-labelledby="match-title">
+      <div class="page-hero compact">
+        <div>
+          <p class="eyebrow">Mirror Match</p>
+          <h1 id="match-title">人格共鸣</h1>
+          <p class="page-lead">选择两个已创建账户，系统会基于人格画像、兴趣分布和聊天风格计算兴趣重合度、性格互补度与破冰话题。</p>
+        </div>
+      </div>
+
+      <div class="match-picker tool-panel">
+        <label>账户 A
+          <select id="matchUserA"></select>
+        </label>
+        <label>账户 B
+          <select id="matchUserB"></select>
+        </label>
+        <button class="primary-action" id="runMatch" type="button">生成 AI 匹配分析</button>
+      </div>
+
+      <div class="match-layout">
+        <div class="match-flip-card" id="matchCardA" tabindex="0" role="button" aria-label="翻转账户A名片">
+          <div class="match-flip-inner">
+            <article class="resume-card match-front" id="resumeAFront"></article>
+            <article class="resume-card match-back" id="resumeABack"></article>
+          </div>
+        </div>
+        <div class="match-flip-card" id="matchCardB" tabindex="0" role="button" aria-label="翻转账户B名片">
+          <div class="match-flip-inner">
+            <article class="resume-card alt match-front" id="resumeBFront"></article>
+            <article class="resume-card alt match-back" id="resumeBBack"></article>
+          </div>
+        </div>
+        <article class="match-result tool-panel">
+          <h2>AI 匹配结果</h2>
+          <div class="score-grid">
+            <div><strong id="interestScore">78%</strong><span>兴趣重合度</span></div>
+            <div><strong id="complementScore">64%</strong><span>性格互补度</span></div>
+            <div><strong id="chatScore">81%</strong><span>聊天风格匹配度</span></div>
+          </div>
+          <p><strong>共同兴趣：</strong><span id="commonInterests">心理学、电影、旅行、情绪成长</span></p>
+          <p><strong>互补点：</strong><span id="complementText">你更偏表达，对方更偏倾听。</span></p>
+          <p><strong>综合解读：</strong><span id="matchReasoning">点击生成后，小Me 会结合两个账户正反两面的画像进行分析。</span></p>
+          <p><strong>推荐破冰话题：</strong><span id="iceBreakers">最近看过的一部电影、理想中的旅行方式、对 MBTI 的看法。</span></p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>Mirror ME 原型网页 · 所有分析均为非医学、非诊断性的自我探索参考。当前账户系统为本地浏览器原型。</p>
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>
